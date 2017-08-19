@@ -10,6 +10,9 @@ local locations = ngx.shared.locations
 local users_to_visits = ngx.shared.users_to_visits
 users_to_visits[1] = {} -- if not declared import breaks down
 
+local locations_to_visits = ngx.shared.locations_to_visits
+locations_to_visits[1] = {} -- if not declared import breaks down
+
 
 local items_dict = {}
 items_dict.users = users
@@ -51,5 +54,16 @@ for index, visit in pairs(visits.values) do
   table.insert(users_to_visits[user], visit.id)
 end
 
+
+-- hashmap of locations->visit
+for index, visit in pairs(visits.values) do
+  local location = visit.location
+
+  if locations_to_visits[location] == nil then
+    locations_to_visits[location] = {}
+  end
+
+  table.insert(locations_to_visits[location], visit.id)
+end
 
 -- vi:syntax=lua
