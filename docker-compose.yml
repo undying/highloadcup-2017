@@ -1,0 +1,11 @@
+
+version: '2'
+
+services:
+  web:
+    build: .
+    ports:
+      - 80:80
+    volumes:
+      - /home/kron/Documents/projects/highloadcup.ru/data:/tmp/data:ro
+

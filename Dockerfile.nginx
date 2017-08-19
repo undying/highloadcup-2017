@@ -1,0 +1,127 @@
+
+FROM debian:8
+CMD [ "/sbin/init.sh" ]
+ENV serial=20160511
+
+### Nginx and Nginx plugins ###
+ENV nginx_v=1.13.4 openresty_v=1.11.2.4 luajit_v=2.1.0-beta3 lua_module_v=0.10.10 ndk_v=0.3.0
+ENV LUAJIT_LIB=/usr/local/lib LUAJIT_INC=/usr/local/include/luajit-2.1
+###
+ENV PATH=/usr/local/openresty/bin:/usr/local/openresty/nginx/sbin:${PATH}
+###
+
+RUN set -x \
+  && export CPU_COUNT=$(grep -c processor /proc/cpuinfo) \
+	&& export DEBIAN_FRONTEND=noninteractive \
+	&& export DEBIAN_CODENAME=$(sed -ne 's,VERSION=.*(\([a-z]\+\))",\1,p' /etc/os-release) \
+	\
+	&& sed -i 's|deb.debian.org|mirror.yandex.ru|' /etc/apt/sources.list \
+	&& sed -i 's|security.debian.org|mirror.yandex.ru/debian-security|' /etc/apt/sources.list \
+	\
+	&& printf "deb http://ftp.ru.debian.org/debian experimental main contrib non-free\n" >> /etc/apt/sources.list \
+	&& printf "deb http://ftp.debian.org/debian jessie-backports main\n" >> /etc/apt/sources.list.d/backports.list \
+	\
+  && apt-get update \
+  && apt-get upgrade -y \
+  && apt-get install -y \
+    --no-install-recommends \
+    --no-install-suggests \
+    wget \
+    ca-certificates \
+    \
+    git \
+    cmake \
+    build-essential \
+    \
+    libpcre3-dev \
+    libssl-dev \
+  \
+  && echo "donwloading and unpacking build dependencies" \
+  && cd /opt/ && printf "\
+    http://nginx.org/download/nginx-${nginx_v}.tar.gz\n \
+    http://luajit.org/download/LuaJIT-${luajit_v}.tar.gz\n \
+    https://openresty.org/download/openresty-${openresty_v}.tar.gz\n \
+    https://github.com/simpl/ngx_devel_kit/archive/v${ndk_v}.tar.gz\n \
+    https://github.com/openresty/lua-nginx-module/archive/v${lua_module_v}.tar.gz\n" \
+    |xargs -P ${CPU_COUNT} -L1 -I{} wget --quiet {} \
+  && ls *.gz|xargs -P ${CPU_COUNT} -L1 -I{} tar xzpf {} \
+  && rm -v *.gz \
+  \
+  && echo "Building OpenResty" \
+  \
+  && cd /opt/openresty-${openresty_v} \
+  && ./configure -j${CPU_COUNT} \
+    --with-pcre-jit \
+    --with-ipv6 \
+  && make -j${CPU_COUNT} \
+  && make install \
+  \
+  && echo "Building the LuaJIT" \
+  \
+  && cd /opt/LuaJIT-${luajit_v} \
+  && make -j${CPU_COUNT} \
+  && make install \
+  \
+  && echo "Building Nginx" \
+  \
+  && cd /opt/nginx-${nginx_v} \
+  && ./configure \
+    --with-ld-opt="-Wl,-rpath,/usr/local/lib" \
+    --prefix=/etc/nginx \
+    --sbin-path=/usr/sbin/nginx \
+    --conf-path=/etc/nginx/nginx.conf \
+    --error-log-path=/var/log/nginx/error.log \
+    --http-log-path=/var/log/nginx/access.log \
+    --pid-path=/var/run/nginx.pid \
+    --lock-path=/var/run/nginx.lock \
+    --http-client-body-temp-path=/var/cache/nginx/client_temp \
+    --http-fastcgi-temp-path=/var/cache/nginx/fastcgi_temp \
+    --http-proxy-temp-path=/var/cache/nginx/proxy_temp \
+    --http-uwsgi-temp-path=/var/cache/nginx/uwsgi_temp \
+    --http-scgi-temp-path=/var/cache/nginx/scgi_temp \
+    --user=nginx --group=nginx \
+    --with-http_addition_module \
+    --with-http_gunzip_module \
+    --with-http_gzip_static_module \
+    --with-http_ssl_module \
+    --with-http_v2_module \
+    --with-ipv6 \
+    --with-pcre-jit \
+    --with-stream_ssl_module \
+    --with-threads \
+    --add-module="/opt/ngx_devel_kit-${ndk_v}" \
+    --add-module="/opt/lua-nginx-module-${lua_module_v}" \
+  && make -j${CPU_COUNT} \
+  && make install \
+  && useradd --user-group --system nginx \
+  && install -d -o nginx -g nginx /var/cache/nginx/ \
+  && install -d -o nginx -g nginx /etc/nginx/ /var/www/ \
+  && install -o nginx conf/mime.types /etc/nginx/ \
+  && install -o nginx html/* /var/www/ \
+  && nginx -V \
+  \
+  && echo "Installing PerconaDB Packages" \
+  \
+  && cd /tmp/ \
+  && wget https://repo.percona.com/apt/percona-release_0.1-4.${DEBIAN_CODENAME}_all.deb \
+  && dpkg -i percona-release_0.1-4.${DEBIAN_CODENAME}_all.deb && rm percona-release_0.1-4.${DEBIAN_CODENAME}_all.deb \
+  && apt-get update \
+  && apt-get install -y \
+    --no-install-recommends \
+    --no-install-suggests \
+    percona-server-server-5.7 \
+  \
+  && echo "Removing Misc Packages" \
+  \
+  && apt-get autoremove -y \
+    git \
+    wget \
+    cmake \
+    build-essential \
+    libpcre3-dev \
+    libssl-dev \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /etc/logrotate.d/*
+
+COPY root/ /
+
