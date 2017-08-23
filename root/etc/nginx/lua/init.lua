@@ -1,6 +1,7 @@
 
 -- global preload
 local item_filter = require('item_filter')
+local item_sort = require('item_sort')
 --
 
 local cjson = require('cjson')
