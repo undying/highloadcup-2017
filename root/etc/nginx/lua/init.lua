@@ -1,4 +1,8 @@
 
+-- global preload
+local item_filter = require('item_filter')
+--
+
 local cjson = require('cjson')
 local item_loader = require('item_loader')
 
