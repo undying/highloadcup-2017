@@ -40,7 +40,7 @@ local items_to_load = { 'users', 'visits', 'locations' }
 for item_num = 1,3 do
   local item = items_to_load[item_num]
 
-  for item_file in string.gmatch(io.popen('echo /tmp/data_unpack/data/FULL/data/' .. item .. '_*.json'):read(), "%S+") do
+  for item_file in string.gmatch(io.popen('echo /tmp/data_unpack/data/TRAIN/data/' .. item .. '_*.json'):read(), "%S+") do
     ngx.log(ngx.STDERR, 'Loading File: ' .. item_file)
 
     local file = io.open(item_file)
