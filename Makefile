@@ -5,7 +5,7 @@ run:
 	docker-compose up --build
 
 build:
-	docker build -t $(IMAGE)
+	docker build -t $(IMAGE) .
 
 push:
 	docker tag $(IMAGE) stor.highloadcup.ru/travels/various_dodo
