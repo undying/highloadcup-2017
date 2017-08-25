@@ -27,6 +27,8 @@ RUN set -x \
     wget \
     ca-certificates \
     \
+    unzip \
+    \
     git \
     cmake \
     build-essential \
