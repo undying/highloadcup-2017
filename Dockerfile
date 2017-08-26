@@ -62,6 +62,8 @@ RUN set -x \
     --with-threads \
     --with-ipv6 \
     \
+    --with-cc-opt="-O3" \
+    \
     --without-http_xss_module \
     --without-http_coolkit_module \
     --without-http_set_misc_module \
