@@ -76,8 +76,10 @@ local item_filters = {
 function item_filter.validate(data_name, filters)
   local valid_filters = {}
   local valid_filters_count = 0
+  local passed_filters_count = 0
 
   for key, value in pairs(filters) do
+    passed_filters_count = passed_filters_count + 1
     local filter = item_filters[data_name][key]
 
     if filter then
@@ -87,11 +89,13 @@ function item_filter.validate(data_name, filters)
         valid_filters[key] = value
       end
 
-      valid_filters_count = valid_filters_count + 1
+      if valid_filters[key] then
+        valid_filters_count = valid_filters_count + 1
+      end
     end
   end
 
-  return valid_filters, valid_filters_count
+  return valid_filters, valid_filters_count, passed_filters_count
 end
 
 

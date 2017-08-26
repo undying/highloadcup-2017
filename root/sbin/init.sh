@@ -7,5 +7,5 @@ for f in /etc/my_init.d/*;do
 done
 
 
-nginx ${NGINX_OPTIONS} -t && exec nginx ${NGINX_OPTIONS} -g 'daemon off;'
+exec nginx ${NGINX_OPTIONS} -g 'daemon off;'
 
