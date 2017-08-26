@@ -1,6 +1,8 @@
 
 local item_filter = {}
 
+local seconds_in_year = 31557600
+
 local items = {
   ['users'] = ngx.shared.users,
   ['visits'] = ngx.shared.visits,
@@ -48,14 +50,14 @@ local item_filters = {
     },
     ['fromAge'] = {
       ['cast'] = tonumber,
-      ['compare'] = function(item_value, filter_value) return item_value > filter_value end,
+      ['compare'] = function(item_value, filter_value) return item_value > (filter_value * seconds_in_year) end,
       ['filter_field'] = 'birth_date',
       ['join_table'] = 'users',
       ['join_field'] = 'user'
     },
     ['toAge'] = {
       ['cast'] = tonumber,
-      ['compare'] = function(item_value, filter_value) return item_value < filter_value end,
+      ['compare'] = function(item_value, filter_value) return item_value < (filter_value * seconds_in_year) end,
       ['filter_field'] = 'birth_date',
       ['join_table'] = 'users',
       ['join_field'] = 'user'
