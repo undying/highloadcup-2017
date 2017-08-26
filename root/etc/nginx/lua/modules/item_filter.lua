@@ -50,20 +50,20 @@ local item_filters = {
     },
     ['fromAge'] = {
       ['cast'] = tonumber,
-      ['compare'] = function(item_value, filter_value) return item_value > (filter_value * seconds_in_year) end,
+      ['compare'] = function(item_value, filter_value) return ((os.time() - item_value) / seconds_in_year) > filter_value  end,
       ['filter_field'] = 'birth_date',
       ['join_table'] = 'users',
       ['join_field'] = 'user'
     },
     ['toAge'] = {
       ['cast'] = tonumber,
-      ['compare'] = function(item_value, filter_value) return item_value < (filter_value * seconds_in_year) end,
+      ['compare'] = function(item_value, filter_value) return ((os.time() - item_value) / seconds_in_year) < filter_value  end,
       ['filter_field'] = 'birth_date',
       ['join_table'] = 'users',
       ['join_field'] = 'user'
     },
     ['gender'] = {
-      ['cast'] = false,
+      ['cast'] = function(g) if g == 'm' or g == 'f' then return g else return nil end end,
       ['compare'] = function(item_value, filter_value) return item_value == filter_value end,
       ['filter_field'] = 'gender',
       ['join_table'] = 'users',
