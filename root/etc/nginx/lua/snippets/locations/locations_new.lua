@@ -17,6 +17,7 @@ item_loader.set(redis_client, redis_key, req_body)
 
 
 http_methods.http_ok('{}')
+storage_redis.set_timeout(redis_client)
 
 
 -- vi:syntax=lua

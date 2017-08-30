@@ -32,7 +32,7 @@ if not req_body then http_methods.http_bad_request() end
 item_loader.item_update(item, req_body)
 item_loader.set(redis_client, redis_key, item)
 
-ngx.say('{}')
+http_methods.say('{}')
 storage_redis.set_timeout(redis_client)
 
 

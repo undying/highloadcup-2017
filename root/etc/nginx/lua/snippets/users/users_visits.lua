@@ -79,9 +79,9 @@ end
 
 -- cjson.encode_empty_table_as_object(false)
 if next(return_visits) ~= nil then
-  ngx.say(cjson.encode({['visits'] = return_visits}))
+  http_methods.say(cjson.encode({['visits'] = return_visits}))
 else
-  ngx.say('{"visits":[]}')
+  http_methods.say('{"visits":[]}')
 end
 
 storage_redis.set_timeout(redis_client)

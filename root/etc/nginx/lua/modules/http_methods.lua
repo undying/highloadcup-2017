@@ -15,13 +15,22 @@ end
 
 
 function http_methods.http_ok(body)
-  if body then ngx.say(body) end
+  if body then
+    ngx.header.content_length = string.len(body)
+    ngx.say(body)
+  end
   ngx.exit(ngx.HTTP_OK)
 end
 
 
 function http_methods.is_method(method)
   return ngx.req.get_method() == method
+end
+
+
+function http_methods.say(str)
+  ngx.header.content_length = string.len(str)
+  ngx.say(str)
 end
 
 

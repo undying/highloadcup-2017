@@ -14,6 +14,7 @@ local item_id = tonumber(ngx.var.id)
 local item_counter = require('item_counter')
 local item_filter = require('item_filter')
 
+
 local filters,
       filters_count,
       passed_filters_count = item_filter.validate('locations')
@@ -53,7 +54,8 @@ for index, visit in pairs(visits) do
   end
 end
 
-ngx.say(cjson.encode({['avg'] = item_counter.marks_avg(return_visits)}))
+
+http_methods.say(cjson.encode({['avg'] = item_counter.marks_avg(return_visits)}))
 storage_redis.set_timeout(redis_client)
 
 -- vi:syntax=lua

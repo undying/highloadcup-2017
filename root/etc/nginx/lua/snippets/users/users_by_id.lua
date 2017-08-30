@@ -34,7 +34,7 @@ if not req_body then http_methods.http_bad_request() end
 item_loader.item_update(user, req_body)
 item_loader.set(redis_client, redis_key, user)
 
-ngx.say('{}')
+http_methods.say('{}')
 storage_redis.set_timeout(redis_client)
 
 -- vi:syntax=lua
