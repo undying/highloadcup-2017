@@ -5,9 +5,7 @@ CMD [ "/sbin/init.sh" ]
 ### Nginx and Nginx plugins ###
 ENV nginx_v=1.13.4 ndk_v=0.3.0
 ENV lua_v=5.1.5 luajit_v=2.1.0-beta3 luarocks_v=2.4.2 lua_cjson_v=2.1.0 lua_module_v=0.10.10
-ENV redis_server_v=4.0.1
-ENV redis_lua_v=2.0.4 luasocket_v=2.0.2
-ENV lua_resty_redis_v=0.26
+ENV as_client_c_v=4.1.9
 ###
 ENV LUA_LIB=/usr/local/lib/ LUA_INC=/usr/local/include LUAJIT_LIB=/usr/local/lib LUAJIT_INC=/usr/local/include/luajit-2.1
 ###
@@ -15,6 +13,8 @@ ENV LUA_LIB=/usr/local/lib/ LUA_INC=/usr/local/include LUAJIT_LIB=/usr/local/lib
 ENV build_deps="wget ca-certificates git cmake build-essential" runtime_deps="unzip busybox"
 ENV nginx_build_deps="libpcre3-dev libssl-dev"
 ENV lua_build_deps="libreadline-dev libncurses5-dev"
+ENV sqlite_deps="libsqlite3-0" sqlite_build_deps="libsqlite3-dev"
+ENV as_build_deps="libc6-dev libssl-dev libncurses5-dev autoconf automake libtool g++ fakeroot" as_deps="python"
 ###
 
 RUN set -x \
@@ -25,8 +25,8 @@ RUN set -x \
 	&& sed -i 's|deb.debian.org|mirror.yandex.ru|' /etc/apt/sources.list \
 	&& sed -i 's|security.debian.org|mirror.yandex.ru/debian-security|' /etc/apt/sources.list \
 	\
-	&& printf "deb http://deb.debian.org/debian experimental main contrib non-free\n" >> /etc/apt/sources.list \
-	&& printf "deb http://deb.debian.org/debian jessie-backports main\n" >> /etc/apt/sources.list.d/backports.list \
+	&& printf "deb http://mirror.yandex.ru/debian experimental main contrib non-free\n" >> /etc/apt/sources.list \
+	&& printf "deb http://mirror.yandex.ru/debian jessie-backports main\n" >> /etc/apt/sources.list.d/backports.list \
 	\
   && apt-get update \
   && apt-get upgrade -y \
@@ -37,6 +37,8 @@ RUN set -x \
     ${build_deps} \
     ${nginx_build_deps} \
     ${lua_build_deps} \
+    ${sqlite_deps} ${sqlite_build_deps} \
+    ${as_deps} ${as_build_deps} \
   \
   && echo "donwloading and unpacking build dependencies" \
   && cd /opt/ && printf "\
@@ -45,15 +47,13 @@ RUN set -x \
     http://luajit.org/download/LuaJIT-${luajit_v}.tar.gz\n \
     https://luarocks.github.io/luarocks/releases/luarocks-${luarocks_v}.tar.gz\n \
     https://www.kyne.com.au/~mark/software/download/lua-cjson-${lua_cjson_v}.tar.gz\n \
-    http://download.redis.io/releases/redis-${redis_server_v}.tar.gz\n \
-    http://files.luaforge.net/releases/luasocket/luasocket/luasocket-${luasocket_v}/luasocket-${luasocket_v}.tar.gz\n \
-    https://github.com/openresty/lua-resty-redis/archive/v${lua_resty_redis_v}.tar.gz\n \
-    https://github.com/nrk/redis-lua/archive/v${redis_lua_v}.tar.gz\n \
+    http://lua.sqlite.org/index.cgi/zip/lsqlite3_fsl09x.zip\n \
     https://github.com/simpl/ngx_devel_kit/archive/v${ndk_v}.tar.gz\n \
     https://github.com/openresty/lua-nginx-module/archive/v${lua_module_v}.tar.gz\n" \
     |xargs -P ${CPU_COUNT} -L1 -I{} wget --quiet {} \
   && ls *.gz|xargs -P ${CPU_COUNT} -L1 -I{} tar xzpf {} \
-  && rm -v *.gz \
+  && ls *.zip|xargs -P ${CPU_COUNT} -L1 -I{} unzip {} \
+  && rm -v *.gz *.zip \
   && ls \
   \
   && echo "building the LuaJIT" \
@@ -77,23 +77,32 @@ RUN set -x \
   && cd /opt/lua-cjson-${lua_cjson_v} \
   && luarocks make \
   \
-  && echo "Building Redis Server" \
-  && cd /opt/redis-${redis_server_v} \
+  && echo "Building Lua SQLite" \
+  && cd /opt/lsqlite3_fsl09x \
   && make -j${CPU_COUNT}\
+  \
+  && echo "Building Aerospike C Client" \
+  && git clone https://github.com/aerospike/aerospike-client-c.git /opt/aerospike-client-c \
+  && cd /opt/aerospike-client-c \
+  && git checkout tags/${as_client_c_v} \
+  && git submodule update --init \
+  && make USE_LUAJIT=1 \
   && make install \
   \
-  && echo "Building LuaSocket for Redis Client" \
-  && cd /opt/luasocket-${luasocket_v} \
+  && echo "Building Aerospike Lua Client" \
+  && git clone https://github.com/aerospike/client-lua.git /opt/client-lua \
+  && cd /opt/client-lua \
+  && ./build_linux.sh \
+  && install /opt/client-lua/as_lua.so /usr/local/lib/lua/5.1/ \
+  \
+  && echo "Building Aerospike Server" \
+  && git clone https://github.com/aerospike/aerospike-server.git /opt/aerospike-server \
+  && cd /opt/aerospike-server \
+  && git checkout tags/3.14.1.2 \
+  && git submodule update --init \
   && make -j${CPU_COUNT} \
-  && make install \
-  \
-  && echo "Building Redis Lua Client" \
-  && cd /opt/redis-lua-${redis_lua_v} \
-  && install ./src/redis.lua /usr/local/share/lua/5.1/ \
-  \
-  && echo "Building Resty Lua Redis Client" \
-  && cd /opt/lua-resty-redis-${lua_resty_redis_v} \
-  && install lib/resty/redis.lua /usr/local/share/lua/5.1/resty_redis.lua \
+  && make deb \
+  && dpkg -i ./pkg/packages/aerospike-server-community-3.14.1.2.debian8.x86_64.deb \
   \
   && echo "Building Nginx" \
   && cd /opt/nginx-${nginx_v} \
@@ -138,8 +147,10 @@ RUN set -x \
     ${build_deps} \
     ${nginx_build_deps} \
     ${lua_build_deps} \
+    ${sqlite_build_deps} \
+    ${as_build_deps} \
   && apt-get clean \
-  && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /etc/logrotate.d/* /opt/*
+  && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /etc/logrotate.d/*
 
 COPY root/ /
 

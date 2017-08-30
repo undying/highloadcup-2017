@@ -4,7 +4,7 @@ CMD [ "/sbin/init.sh" ]
 ENV serial=20160511
 
 ### Nginx and Nginx plugins ###
-ENV nginx_v=1.13.4 openresty_v=1.11.2.4 luajit_v=2.1.0-beta3 lua_module_v=0.10.10 ndk_v=0.3.0
+ENV nginx_v=1.13.4 luajit_v=2.1.0-beta3 lua_module_v=0.10.10 ndk_v=0.3.0
 ENV LUAJIT_LIB=/usr/local/lib LUAJIT_INC=/usr/local/include/luajit-2.1
 ###
 ENV PATH=/usr/local/openresty/bin:/usr/local/openresty/nginx/sbin:${PATH}

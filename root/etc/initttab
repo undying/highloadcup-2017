@@ -1,0 +1,5 @@
+::ctrlaltdel:/bin/kill -QUIT 1
+::restart:/bin/kill -TERM 1
+
+::respawn:/sbin/run_nginx.sh
+::respawn:/sbin/run_redis.sh

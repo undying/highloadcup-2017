@@ -1,6 +1,7 @@
 
-local item_filter = {}
+local item_loader = require('item_loader')
 
+local item_filter = {}
 local seconds_in_year = 31557600
 
 local items = {
@@ -73,24 +74,26 @@ local item_filters = {
 }
 
 
-function item_filter.validate(data_name, filters)
+function item_filter.validate(data_name)
   local valid_filters = {}
   local valid_filters_count = 0
   local passed_filters_count = 0
 
-  for key, value in pairs(filters) do
-    passed_filters_count = passed_filters_count + 1
-    local filter = item_filters[data_name][key]
+  for key, value in pairs(ngx.req.get_uri_args()) do
+    if value ~= 'queryId' then
+      passed_filters_count = passed_filters_count + 1
+      local filter = item_filters[data_name][key]
 
-    if filter then
-      if filter.cast then
-        valid_filters[key] = filter.cast(value)
-      else
-        valid_filters[key] = value
-      end
+      if filter then
+        if filter.cast then
+          valid_filters[key] = filter.cast(value)
+        else
+          valid_filters[key] = value
+        end
 
-      if valid_filters[key] then
-        valid_filters_count = valid_filters_count + 1
+        if valid_filters[key] then
+          valid_filters_count = valid_filters_count + 1
+        end
       end
     end
   end
@@ -98,8 +101,8 @@ function item_filter.validate(data_name, filters)
   return valid_filters, valid_filters_count, passed_filters_count
 end
 
-
-function item_filter.match_filter(item, filter_table, filter_name, filter_value)
+--[=====[
+function item_filter.match_filter2(item, filter_table, filter_name, filter_value)
   local join_item = {}
   local filter = item_filters[filter_table][filter_name]
 
@@ -110,6 +113,40 @@ function item_filter.match_filter(item, filter_table, filter_name, filter_value)
   end
 
   return filter.compare(join_item[filter.filter_field], filter_value)
+end
+]=====]
+
+
+function item_filter.match_filter(item_name, item, join_items, filter_name, filter_value)
+  local filter = item_filters[item_name][filter_name]
+
+  if not filter.join_field then
+    return filter.compare(item[filter.filter_field], filter_value)
+  end
+
+  local join_item = join_items[filter.join_field]
+  return filter.compare(join_item[filter.filter_field], filter_value)
+end
+
+
+function item_filter.get_join_items(connection, item_name, item, filters)
+  local join_items = {}
+  local return_items = {}
+
+  for filter_name, filter_value in pairs(filters) do
+    local f = item_filters[item_name][filter_name]
+    if f.join_table then
+      if not join_items[f.join_field] then
+        join_items[f.join_field] = f.join_table .. ':' .. item[f.join_field]
+      end
+    end
+  end
+
+  for name, key in pairs(join_items) do
+    return_items[name] = item_loader.get(connection, key)
+  end
+
+  return return_items
 end
 
 

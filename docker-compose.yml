@@ -9,4 +9,5 @@ services:
     volumes:
       - /home/kron/Documents/projects/highloadcup.ru/data:/tmp/data:ro
       - /home/kron/Documents/projects/hlcupdocs/data/TRAIN/data:/tmp/data_unpack:ro
+      - /home/kron/Documents/projects/highloadcup.ru/root/opt:/tmp/opt
 

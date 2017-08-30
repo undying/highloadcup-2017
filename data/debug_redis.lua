@@ -7,19 +7,11 @@ local redis = require 'redis'
 
 local redis_client = redis.connect('127.0.0.1', 6379)
 
-local item_name = ''
-local item_list = { 'visits', 'locations', 'users' }
+local items_to_load = { 'users', 'visits', 'locations' }
+for item_num = 1,3 do
+  local item_name = items_to_load[item_num]
 
-for index, item_file in ipairs(arg) do
-  item_name = ''
-
-  for _, iname in pairs(item_list) do
-    if string.match(item_file, iname) then
-      item_name = iname
-    end
-  end
-
-  if item_name ~= '' then
+  for item_file in string.gmatch(io.popen('echo /tmp/data_unpack/' .. item_name .. '_*.json'):read(), "%S+") do
     print('Loading File: ' .. item_file)
 
     local file = io.open(item_file)
