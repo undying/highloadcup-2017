@@ -101,21 +101,6 @@ function item_filter.validate(data_name)
   return valid_filters, valid_filters_count, passed_filters_count
 end
 
---[=====[
-function item_filter.match_filter2(item, filter_table, filter_name, filter_value)
-  local join_item = {}
-  local filter = item_filters[filter_table][filter_name]
-
-  if filter.join_table then
-    join_item = items[filter.join_table].values[item[filter.join_field]]
-  else
-    join_item = item
-  end
-
-  return filter.compare(join_item[filter.filter_field], filter_value)
-end
-]=====]
-
 
 function item_filter.match_filter(item_name, item, join_items, filter_name, filter_value)
   local filter = item_filters[item_name][filter_name]
