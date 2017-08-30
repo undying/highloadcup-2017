@@ -39,12 +39,21 @@ function item_loader.get(connection, key)
 end
 
 
+function item_loader.set(connection, key, value)
+  local ok, err = connection:set(key, body_encode(value))
+  return check_result(ok, err)
+end
+
+
 function item_loader.mget(connection, keys)
   local res, err = connection:mget(unpack(keys))
   if res and res ~= ngx.null then
     local result = {}
+
     for _, value in pairs(res) do
-      table.insert(result, body_decode(value))
+      if value and type(value) ~= 'userdata' then
+        table.insert(result, body_decode(value))
+      end
     end
 
     return result
@@ -60,14 +69,43 @@ function item_loader.smembers(connection, key)
 end
 
 
+function item_loader.sadd(connection, key, value)
+  local res, err = connection:sadd(key, value)
+  return check_result(res, err)
+end
+
+
 function item_loader.item_try(connection, item_name, item_id, try_table)
-  if try_table[item_name] then
-    return try_table[item_name]
+  if try_table[item_name] then return try_table[item_name] end
+  return item_loader.get(connection, item_name .. 's:' .. item_id)
+end
+
+
+function item_loader.item_update(item, update)
+  for k, v in pairs(update) do
+    item[k] = v
   end
 
-  local res, err = connection:get(item_name .. ':' .. item_id)
-  return body_decode(check_result(res, err))
+  return item
 end
+
+
+function item_loader.get_req_body()
+  ngx.req.read_body() -- reading client body
+  local body_data = ngx.req.get_body_data()
+
+  if body_data then
+    local return_data = body_decode(body_data)
+    for k, v in pairs(return_data) do
+      if not k or not v or type(v) == 'userdata' then
+        return
+      end
+    end
+
+    return return_data
+  end
+end
+
 
 return item_loader
 

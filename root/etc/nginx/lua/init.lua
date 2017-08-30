@@ -1,10 +1,11 @@
 
 -- global preload
-local item_loader = require('item_loader')
 local item_filter = require('item_filter')
 local item_format = require('item_format')
+local item_loader = require('item_loader')
 local item_sort = require('item_sort')
 
+local http_methods = require('http_methods')
 local storage_redis = require('storage_redis')
 --
 

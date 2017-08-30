@@ -114,6 +114,24 @@ function item_filter.match_filter(item_name, item, join_items, filter_name, filt
 end
 
 
+function item_filter.match_filters(item_name, item, join_items, filters)
+  local filters_matched = 0
+
+  for filter_name, filter_value in pairs(filters) do
+    if item_filter.match_filter(
+        item_name,
+        item,
+        join_items,
+        filter_name,
+        filter_value) then
+      filters_matched = filters_matched + 1
+    end
+  end
+
+  return filters_matched
+end
+
+
 function item_filter.get_join_items(connection, item_name, item, filters)
   local join_items = {}
   local return_items = {}
