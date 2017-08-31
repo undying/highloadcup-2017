@@ -14,11 +14,13 @@ function http_methods.http_bad_request(body)
 end
 
 
-function http_methods.http_ok(body)
+function http_methods.http_ok(body, cb)
   if body then
     ngx.header.content_length = string.len(body)
     ngx.say(body)
   end
+
+  if cb then cb() end
   ngx.exit(ngx.HTTP_OK)
 end
 

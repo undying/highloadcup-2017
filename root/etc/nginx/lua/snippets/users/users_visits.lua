@@ -20,20 +20,27 @@ local filters,
       passed_filters_count = item_filter.validate('visits')
 
 -- 400 if filters are invalid
-if filters_count ~= passed_filters_count then http_methods.http_bad_request() end
+if filters_count ~= passed_filters_count then
+  storage_redis.set_keepalive(redis_client)
+  http_methods.http_bad_request()
+end
 
 
 local redis_key = 'users:' .. item_id
 local item = item_loader.get(redis_client, redis_key)
 
 -- 404 if not found
-if not item then http_methods.http_not_found() end
+if not item then
+  storage_redis.set_keepalive(redis_client)
+  http_methods.http_not_found()
+end
 
 
 local redis_key = 'users_to_visits:' .. item_id
 local visits_ids = item_loader.smembers(redis_client, redis_key)
 
 if not visits_ids or next(visits_ids) == nil then
+  storage_redis.set_keepalive(redis_client)
   http_methods.http_ok('{"visits":[]}')
 end
 
@@ -51,6 +58,7 @@ if filters_count == 0 then
     })
   end
 
+  storage_redis.set_keepalive(redis_client)
   http_methods.http_ok(cjson.encode({['visits'] = return_visits}))
 end
 
@@ -77,13 +85,12 @@ for index, visit in pairs(visits) do
 end
 
 
--- cjson.encode_empty_table_as_object(false)
-if next(return_visits) ~= nil then
-  http_methods.say(cjson.encode({['visits'] = return_visits}))
+storage_redis.set_keepalive(redis_client)
+if next(return_visits) == nil then
+  http_methods.http_ok('{"visits":[]}')
 else
-  http_methods.say('{"visits":[]}')
+  http_methods.http_ok(cjson.encode({['visits'] = return_visits}))
 end
 
-storage_redis.set_keepalive(redis_client)
 
 -- vi:syntax=lua

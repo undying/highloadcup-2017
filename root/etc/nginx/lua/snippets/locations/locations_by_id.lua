@@ -16,11 +16,13 @@ if not item then http_methods.http_not_found() end
 
 
 if http_methods.is_method('GET') then
+  storage_redis.set_keepalive(redis_client)
   http_methods.http_ok(cjson.encode(item))
 end
 
 
 if not http_methods.is_method('POST') then
+  storage_redis.set_keepalive(redis_client)
   http_methods.http_bad_request()
 end
 
@@ -32,8 +34,7 @@ if not req_body then http_methods.http_bad_request() end
 item_loader.item_update(item, req_body)
 item_loader.set(redis_client, redis_key, item)
 
-http_methods.say('{}')
 storage_redis.set_keepalive(redis_client)
-
+http_methods.http_ok('{}')
 
 -- vi:syntax=lua

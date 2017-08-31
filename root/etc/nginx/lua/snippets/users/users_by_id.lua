@@ -18,13 +18,13 @@ if not user then http_methods.http_not_found() end
 
 -- 200 if request method == GET
 if http_methods.is_method('GET') then
-  http_methods.say(cjson.encode(user))
   storage_redis.set_keepalive(redis_client)
-  http_methods.http_ok()
+  http_methods.http_ok(cjson.encode(user))
 end
 
 -- 400 if method is not POST
 if not http_methods.is_method('POST') then
+  storage_redis.set_keepalive(redis_client)
   http_methods.http_bad_request()
 end
 
@@ -36,7 +36,7 @@ if not req_body then http_methods.http_bad_request() end
 item_loader.item_update(user, req_body)
 item_loader.set(redis_client, redis_key, user)
 
-http_methods.say('{}')
 storage_redis.set_keepalive(redis_client)
+http_methods.http_ok('{}')
 
 -- vi:syntax=lua

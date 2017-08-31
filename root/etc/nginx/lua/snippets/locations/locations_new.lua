@@ -10,14 +10,16 @@ local storage_redis = require('storage_redis')
 local redis_client = storage_redis.connect()
 
 local req_body = item_loader.get_req_body()
-if not req_body then http_methods.http_bad_request() end
+if not req_body then
+  storage_redis.set_keepalive(redis_client)
+  http_methods.http_bad_request()
+end
 
 local redis_key = 'locations:' .. req_body.id
 item_loader.set(redis_client, redis_key, req_body)
 
 
-http_methods.http_ok('{}')
 storage_redis.set_keepalive(redis_client)
-
+http_methods.http_ok('{}')
 
 -- vi:syntax=lua
