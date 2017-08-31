@@ -5,9 +5,7 @@ local redis = require('resty_redis')
 
 function storage_redis.connect()
   local r = redis:new()
-  local ok, err = r:connect(
-    ngx.shared.storage_redis.options.host,
-    ngx.shared.storage_redis.options.port)
+  local ok, err = r:connect(unpack(ngx.shared.storage_redis.options.connect))
 
   if not ok then
     ngx.log(ngx.STDERR, 'redis connection failed')
@@ -18,8 +16,10 @@ function storage_redis.connect()
 end
 
 
-function storage_redis.set_timeout(connection)
-  connection:set_keepalive(ngx.shared.storage_redis.options.keepalive)
+function storage_redis.set_keepalive(connection)
+  connection:set_keepalive(
+  ngx.shared.storage_redis.options.keepalive_idle,
+  ngx.shared.storage_redis.options.keepalive_pool)
 end
 
 

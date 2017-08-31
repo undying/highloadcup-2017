@@ -18,7 +18,9 @@ if not user then http_methods.http_not_found() end
 
 -- 200 if request method == GET
 if http_methods.is_method('GET') then
-  http_methods.http_ok(cjson.encode(user))
+  http_methods.say(cjson.encode(user))
+  storage_redis.set_keepalive(redis_client)
+  http_methods.http_ok()
 end
 
 -- 400 if method is not POST
@@ -35,6 +37,6 @@ item_loader.item_update(user, req_body)
 item_loader.set(redis_client, redis_key, user)
 
 http_methods.say('{}')
-storage_redis.set_timeout(redis_client)
+storage_redis.set_keepalive(redis_client)
 
 -- vi:syntax=lua

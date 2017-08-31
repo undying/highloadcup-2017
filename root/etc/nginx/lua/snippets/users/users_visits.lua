@@ -84,6 +84,6 @@ else
   http_methods.say('{"visits":[]}')
 end
 
-storage_redis.set_timeout(redis_client)
+storage_redis.set_keepalive(redis_client)
 
 -- vi:syntax=lua

@@ -35,7 +35,7 @@ item_loader.item_update(item, req_body)
 item_loader.set(redis_client, redis_key, item)
 
 ngx.say('{}')
-storage_redis.set_timeout(redis_client)
+storage_redis.set_keepalive(redis_client)
 
 
 -- vi:syntax=lua

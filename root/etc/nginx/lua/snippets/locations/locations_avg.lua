@@ -56,6 +56,6 @@ end
 
 
 http_methods.say(cjson.encode({['avg'] = item_counter.marks_avg(return_visits)}))
-storage_redis.set_timeout(redis_client)
+storage_redis.set_keepalive(redis_client)
 
 -- vi:syntax=lua
