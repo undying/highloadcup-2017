@@ -22,4 +22,8 @@ ngx.shared.storage_redis.options.keepalive_pool = 4096
 ngx.shared.storage_redis.options.connect = { '127.0.0.1', 6379 }
 --
 
+-- loading options.txt data
+item_loader.load_options()
+--
+
 -- vi:syntax=lua

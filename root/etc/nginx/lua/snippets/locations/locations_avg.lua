@@ -53,7 +53,7 @@ end
 
 
 local return_visits = {}
-for index, visit in pairs(visits) do
+for _, visit in pairs(visits) do
   local join_items = item_filter.get_join_items(redis_client, 'locations', visit, filters)
   local filters_matched = item_filter.match_filters('locations', visit, join_items, filters)
 

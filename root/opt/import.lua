@@ -15,8 +15,10 @@ local redis_client = redis.connect('127.0.0.1', 6379)
 
 function pipeline_sadd(redis_client, buffer)
   redis_client:pipeline(function(r)
-    for key, value in pairs(buffer) do
-      r:sadd(key, value)
+    for _, line in pairs(buffer) do
+      for k, v in pairs(line) do
+        r:sadd(k, v)
+      end
     end
   end)
 end
@@ -68,10 +70,9 @@ for index, item_file in ipairs(arg) do
       end
 
       if is_visits then
-        buffer_sadd['users_to_visits:' .. item.user] = 'visits:' .. item.id
-        buffer_sadd['locations_to_visits:' .. item.location] = 'visits:' .. item.id
+        table.insert(buffer_sadd, {['users_to_visits:' .. item.user] = 'visits:' .. item.id})
+        table.insert(buffer_sadd, {['locations_to_visits:' .. item.location] = 'visits:' .. item.id})
         buffer_sadd_len = buffer_sadd_len + 2
-        
         if buffer_sadd_len > buffer_limit then
           pipeline_sadd(redis_client, buffer_sadd)
 

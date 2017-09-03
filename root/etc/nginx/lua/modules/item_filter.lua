@@ -10,6 +10,16 @@ local items = {
   ['locations'] = ngx.shared.locations
 }
 
+
+function item_filter.get_timestamp()
+  if ngx.shared.options.timestamp then
+    return ngx.shared.options.timestamp
+  else
+    return os.time()
+  end
+end
+
+
 local item_filters = {
   ['visits'] = {
     ['toDate'] = {
@@ -51,14 +61,14 @@ local item_filters = {
     },
     ['fromAge'] = {
       ['cast'] = tonumber,
-      ['compare'] = function(item_value, filter_value) return ((os.time() - item_value) / seconds_in_year) > filter_value  end,
+      ['compare'] = function(item_value, filter_value) return ((item_filter.get_timestamp() - item_value) / seconds_in_year) >= filter_value  end,
       ['filter_field'] = 'birth_date',
       ['join_table'] = 'users',
       ['join_field'] = 'user'
     },
     ['toAge'] = {
       ['cast'] = tonumber,
-      ['compare'] = function(item_value, filter_value) return ((os.time() - item_value) / seconds_in_year) < filter_value  end,
+      ['compare'] = function(item_value, filter_value) return ((item_filter.get_timestamp() - item_value) / seconds_in_year) <= filter_value  end,
       ['filter_field'] = 'birth_date',
       ['join_table'] = 'users',
       ['join_field'] = 'user'

@@ -20,7 +20,7 @@ item_loader.set(redis_client, redis_key, req_body)
 
 for _, n in pairs({'user', 'location'}) do
   local redis_key = n .. 's_to_visits:' .. req_body[n]
-  item_loader.sadd(redis_client, redis_key, req_body.id)
+  item_loader.sadd(redis_client, redis_key, 'visits:' .. req_body.id)
 end
 
 

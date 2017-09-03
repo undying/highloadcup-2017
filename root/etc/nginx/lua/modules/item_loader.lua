@@ -50,7 +50,7 @@ function item_loader.mget(connection, keys)
   if res and res ~= ngx.null then
     local result = {}
 
-    for _, value in pairs(res) do
+    for index, value in pairs(res) do
       if value and type(value) ~= 'userdata' then
         table.insert(result, body_decode(value))
       end
@@ -103,6 +103,45 @@ function item_loader.get_req_body()
     end
 
     return return_data
+  end
+end
+
+
+function item_loader.is_file_exists(file)
+  local f = io.open(file)
+  if f then
+    io.close(f)
+    return true
+  else
+    return false
+  end
+end
+
+
+function item_loader.load_options()
+  local options_files = {
+    '/tmp/data/options.txt',
+    '/tmp/data_unpack/options.txt'
+  }
+
+  for _, file in pairs(options_files) do
+    ngx.log(ngx.STDERR, 'Trying to Load: ' .. file)
+
+    if item_loader.is_file_exists(file) then
+      ngx.log(ngx.STDERR, 'Loading: ' .. file)
+      local line_num = 0
+
+      for line in io.lines(file) do
+        line_num = line_num + 1
+        if line_num == 1 then
+          ngx.shared.storage_redis.options.timestamp = tonumber(line)
+        elseif line_num == 2 then
+          ngx.shared.storage_redis.options.is_ratio = tonumber(line)
+        else
+          break
+        end
+      end
+    end
   end
 end
 
