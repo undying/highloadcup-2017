@@ -15,6 +15,7 @@ if not req_body then
   http_methods.http_bad_request()
 end
 
+
 local redis_key = 'visits:' .. req_body.id
 item_loader.set(redis_client, redis_key, req_body)
 

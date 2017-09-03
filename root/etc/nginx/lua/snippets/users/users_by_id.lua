@@ -6,20 +6,20 @@ local item_loader = require('item_loader')
 local storage_redis = require('storage_redis')
 
 local redis_client = storage_redis.connect()
-local user_id = tonumber(ngx.var.id)
+local item_id = tonumber(ngx.var.id)
 
-local redis_key = 'users:' .. user_id
-local user = item_loader.get(redis_client, redis_key)
+local redis_key = 'users:' .. item_id
+local item = item_loader.get(redis_client, redis_key)
 
 
 -- 404 if no such item
-if not user then http_methods.http_not_found() end
+if not item then http_methods.http_not_found() end
 
 
 -- 200 if request method == GET
 if http_methods.is_method('GET') then
   storage_redis.set_keepalive(redis_client)
-  http_methods.http_ok(cjson.encode(user))
+  http_methods.http_ok(cjson.encode(item))
 end
 
 -- 400 if method is not POST
@@ -33,8 +33,8 @@ local req_body = item_loader.get_req_body()
 if not req_body then http_methods.http_bad_request() end
 
 
-item_loader.item_update(user, req_body)
-item_loader.set(redis_client, redis_key, user)
+item_loader.item_update(item, req_body)
+item_loader.set(redis_client, redis_key, item)
 
 storage_redis.set_keepalive(redis_client)
 http_methods.http_ok('{}')
