@@ -2,6 +2,9 @@
 local cjson = require('cjson')
 local item_loader = {}
 
+local item_relations = {
+  ['visit'] = { 'user', 'location' }
+}
 
 local function check_result(res, err)
   if not res then
@@ -75,6 +78,12 @@ function item_loader.sadd(connection, key, value)
 end
 
 
+function item_loader.srem(connection, key, value)
+  local res, err = connection:srem(key, value)
+  return check_result(res, err)
+end
+
+
 function item_loader.item_try(connection, item_name, item_id, try_table)
   if try_table[item_name] then return try_table[item_name] end
   return item_loader.get(connection, item_name .. 's:' .. item_id)
@@ -87,6 +96,27 @@ function item_loader.item_update(item, update)
   end
 
   return item
+end
+
+
+function item_loader.update_relations(connection, item_name, item, update)
+  if not item_relations[item_name] then
+    return
+  end
+
+  for k, v in pairs(update) do
+    for _, rel in pairs(item_relations[item_name]) do
+      if k == rel then
+        -- redis_key - locations_to_visits:<id>
+        redis_key = rel .. 's_to_' .. item_name .. 's:' .. item[k]
+        -- remove member from relation - srem(key, visits:<id>)
+        item_loader.srem(connection, redis_key, item_name .. 's:' .. item.id)
+        -- now generate new key for new relation
+        redis_key = rel .. 's_to_' .. item_name .. 's:' .. v
+        item_loader.sadd(connection, redis_key, item_name .. 's:' .. item.id)
+      end
+    end
+  end
 end
 
 

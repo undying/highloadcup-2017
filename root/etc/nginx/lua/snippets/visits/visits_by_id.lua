@@ -39,6 +39,7 @@ if not req_body then
 end
 
 
+item_loader.update_relations(redis_client, 'visit', item, req_body)
 item_loader.item_update(item, req_body)
 item_loader.set(redis_client, redis_key, item)
 
