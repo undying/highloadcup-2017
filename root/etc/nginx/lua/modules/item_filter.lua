@@ -15,7 +15,7 @@ function item_filter.get_timestamp()
   if ngx.shared.options.timestamp then
     return ngx.shared.options.timestamp
   else
-    return os.time()
+    return ngx.time()
   end
 end
 
