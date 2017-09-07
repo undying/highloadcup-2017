@@ -1,4 +1,5 @@
 
+local storage_redis = require('storage_redis')
 local cjson = require('cjson')
 local item_loader = {}
 
@@ -36,20 +37,24 @@ local function body_decode(body)
 end
 
 
-function item_loader.get(connection, key)
+function item_loader.get(connections, key)
+  local connection = storage_redis.chose('r', connections)
   local res, err = connection:get(key)
   return body_decode(check_result(res, err))
 end
 
 
-function item_loader.set(connection, key, value)
+function item_loader.set(connections, key, value)
+  local connection = storage_redis.chose('w', connections)
   local ok, err = connection:set(key, body_encode(value))
   return check_result(ok, err)
 end
 
 
-function item_loader.mget(connection, keys)
+function item_loader.mget(connections, keys)
+  local connection = storage_redis.chose('r', connections)
   local res, err = connection:mget(unpack(keys))
+
   if res and res ~= ngx.null then
     local result = {}
 
@@ -66,27 +71,30 @@ function item_loader.mget(connection, keys)
 end
 
 
-function item_loader.smembers(connection, key)
+function item_loader.smembers(connections, key)
+  local connection = storage_redis.chose('r', connections)
   local res, err = connection:smembers(key)
   return check_result(res, err)
 end
 
 
-function item_loader.sadd(connection, key, value)
+function item_loader.sadd(connections, key, value)
+  local connection = storage_redis.chose('w', connections)
   local res, err = connection:sadd(key, value)
   return check_result(res, err)
 end
 
 
-function item_loader.srem(connection, key, value)
+function item_loader.srem(connections, key, value)
+  local connection = storage_redis.chose('w', connections)
   local res, err = connection:srem(key, value)
   return check_result(res, err)
 end
 
 
-function item_loader.item_try(connection, item_name, item_id, try_table)
+function item_loader.item_try(connections, item_name, item_id, try_table)
   if try_table[item_name] then return try_table[item_name] end
-  return item_loader.get(connection, item_name .. 's:' .. item_id)
+  return item_loader.get(connections, item_name .. 's:' .. item_id)
 end
 
 
@@ -99,7 +107,7 @@ function item_loader.item_update(item, update)
 end
 
 
-function item_loader.update_relations(connection, item_name, item, update)
+function item_loader.update_relations(connections, item_name, item, update)
   if not item_relations[item_name] then
     return
   end
@@ -110,10 +118,10 @@ function item_loader.update_relations(connection, item_name, item, update)
         -- redis_key - locations_to_visits:<id>
         redis_key = rel .. 's_to_' .. item_name .. 's:' .. item[k]
         -- remove member from relation - srem(key, visits:<id>)
-        item_loader.srem(connection, redis_key, item_name .. 's:' .. item.id)
+        item_loader.srem(connections, redis_key, item_name .. 's:' .. item.id)
         -- now generate new key for new relation
         redis_key = rel .. 's_to_' .. item_name .. 's:' .. v
-        item_loader.sadd(connection, redis_key, item_name .. 's:' .. item.id)
+        item_loader.sadd(connections, redis_key, item_name .. 's:' .. item.id)
       end
     end
   end
