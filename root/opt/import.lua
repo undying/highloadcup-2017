@@ -11,7 +11,7 @@ local is_visits = false
 local item_name = ''
 local item_list = { 'visits', 'locations', 'users' }
 
-local redis_client = redis.connect('127.0.0.1', 6379)
+local redis_client = redis.connect('127.0.0.1', 16379)
 
 function pipeline_sadd(redis_client, buffer)
   redis_client:pipeline(function(r)
