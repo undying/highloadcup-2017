@@ -21,7 +21,7 @@ function http_methods.http_ok(body, cb)
   end
 
   if cb then cb() end
-  ngx.exit(ngx.HTTP_OK)
+  ngx.exit(ngx.OK)
 end
 
 
