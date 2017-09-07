@@ -19,7 +19,7 @@ local redis = require('resty_redis')
 ngx.shared.storage_redis.options = {}
 ngx.shared.storage_redis.options.keepalive_idle = 600000
 ngx.shared.storage_redis.options.keepalive_pool = 8192
-ngx.shared.storage_redis.options.connections = { {'unix:/run/redis-master.sock'}, {'unix:/run/redis-slave.sock'} }
+ngx.shared.storage_redis.options.connections = { {'unix:/run/redis-master.sock'} }
 --
 
 -- loading options.txt data

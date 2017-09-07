@@ -28,6 +28,8 @@ function storage_redis.chose(mode, connections)
     return connections[1]
   end
 
+  if not connections[2] then return connections[1] end
+
   local to_chose_cnt = 0
   for index, connection in pairs(connections) do
     to_chose_cnt = to_chose_cnt + 1
