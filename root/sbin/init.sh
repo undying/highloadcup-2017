@@ -8,5 +8,6 @@ done
 /sbin/run_redis.sh
 /sbin/run_import.sh
 
+/sbin/warmup.sh &
 /sbin/run_nginx.sh
 
