@@ -1,9 +1,11 @@
 
 package.cpath = package.cpath .. ';/usr/local/lib/lua/5.1/?.so'
-package.path = package.path .. ';/usr/local/share/lua/5.1/?.lua'
+package.path = package.path .. ';/usr/local/share/lua/5.1/?.ljbc'
 
+local JSON = require 'JSON'
 local cjson = require 'cjson'
 local redis = require 'redis'
+local inspect = require 'inspect'
 
 local redis_client = redis.connect('127.0.0.1', 6379)
 
@@ -23,11 +25,11 @@ for index, item_file in ipairs(arg) do
     print('Loading File: ' .. item_file)
 
     local file = io.open(item_file)
-    local item_json = cjson.decode(file:read())
+    local item_json = JSON:decode(file:read())
 
-    for index, item in pairs(item_json[item_name]) do
-      redis_client:set(item_name .. ':' .. item.id, cjson.encode(item))
-    end
+    -- for index, item in pairs(item_json[item_name]) do
+    --   redis_client:set(item_name .. ':' .. item.id, cjson.encode(item))
+    -- end
   end
 end
 
