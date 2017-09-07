@@ -4,7 +4,7 @@ CPU_COUNT=$(grep -c processor /proc/cpuinfo)
 DATA_PATH=/tmp/data_unpack/
 IMPORTER=/opt/import.lua
 
-for port in 6379;do
+for port in 16379;do
   until redis-cli -p ${port} info > /dev/null;do
     sleep 1
   done
