@@ -7,6 +7,7 @@ local item_relations = {
   ['visit'] = { 'user', 'location' }
 }
 
+
 local function check_result(res, err)
   if not res then
     ngx.log(ngx.STDERR, 'unable to get key from redis: ' .. err)
@@ -20,20 +21,59 @@ end
 
 
 local function body_encode(body)
-  if body then
-    return cjson.encode(body)
-  else
-    return body
+  if not body then return nil end
+
+  local s = ''
+  local comma = ''
+
+  for k,v in pairs(body) do
+    if string.len(s) > 0 then comma = ',' end
+    s = s .. comma .. k .. ':' .. v
   end
+
+  return s
 end
 
 
 local function body_decode(body)
-  if body then
-    return cjson.decode(body)
-  else
-    return body
+  if not body then return nil end
+
+  local t = {}
+  local key = ''
+  local value = ''
+  local pos_start = 1
+  local pos_end = 1
+  local eos = false
+  local body_len = string.len(body)
+
+  for i=1,body_len,1 do
+    eos = i == body_len
+
+    if eos then
+      pos_end = i
+    else
+      pos_end = i - 1
+    end
+
+    if string.len(key) == 0 then
+      if string.sub(body, i, i) == ':' then
+        key = string.sub(body, pos_start, pos_end)
+        pos_start = i + 1
+      end
+    else
+      if string.sub(body, i, i) == ',' or eos then
+        value = string.sub(body, pos_start, pos_end)
+        t[key] = tonumber(value)
+
+        if not t[key] then t[key] = value end
+
+        pos_start = i + 1
+        key = ''
+      end
+    end
   end
+
+  return t
 end
 
 
@@ -133,7 +173,7 @@ function item_loader.get_req_body()
   local body_data = ngx.req.get_body_data()
 
   if body_data then
-    local return_data = body_decode(body_data)
+    local return_data = cjson.decode(body_data)
     for k, v in pairs(return_data) do
       if not k or not v or type(v) == 'userdata' then
         return

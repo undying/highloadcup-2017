@@ -13,6 +13,27 @@ local item_list = { 'visits', 'locations', 'users' }
 
 local redis_client = redis.connect('127.0.0.1', 16379)
 
+
+function item_encode(body)
+  if not body then return nil end
+
+  local s = ''
+  local comma = ''
+
+  for k,v in pairs(body) do
+    if string.len(s) > 0 then comma = ',' end
+    s = s .. comma .. k .. ':' .. v
+  end
+
+  return s
+end
+
+
+function item_encode2(body)
+  return cjson.encode(body)
+end
+
+
 function pipeline_sadd(redis_client, buffer)
   redis_client:pipeline(function(r)
     for _, line in pairs(buffer) do
@@ -54,11 +75,9 @@ for index, item_file in ipairs(arg) do
     local buffer_sadd_len = 0
 
     local file = io.open(item_file)
-    -- local item_json = cjson.decode(file:read())
 
-    -- for index, item in pairs(item_json[item_name]) do
     for index, item in pairs(cjson.decode(file:read())[item_name]) do
-      buffer_set[item_name .. ':' .. item.id] = cjson.encode(item)
+      buffer_set[item_name .. ':' .. item.id] = item_encode(item)
       buffer_set_len = buffer_set_len + 1
 
       -- if buffer filled - purge it
