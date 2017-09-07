@@ -155,7 +155,7 @@ RUN set -x \
   \
   && echo "Removing Misc Packages" \
   \
-  # && apt-get autoremove -y \
+  && apt-get autoremove -y \
     ${build_deps} \
     ${nginx_build_deps} \
     ${lua_build_deps} \
