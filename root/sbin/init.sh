@@ -9,5 +9,7 @@ done
 /sbin/run_import.sh
 
 /sbin/warmup.sh &
+/sbin/socket_monitor.sh &
+
 /sbin/run_nginx.sh
 
