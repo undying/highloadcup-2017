@@ -4,12 +4,6 @@ local item_loader = require('item_loader')
 local item_filter = {}
 local seconds_in_year = 31557600
 
-local items = {
-  ['users'] = ngx.shared.users,
-  ['visits'] = ngx.shared.visits,
-  ['locations'] = ngx.shared.locations
-}
-
 
 function item_filter.get_timestamp()
   if ngx.shared.options.timestamp then
@@ -17,6 +11,25 @@ function item_filter.get_timestamp()
   else
     return ngx.time()
   end
+end
+
+
+function item_filter.ts_to_age(ts)
+  local date_now = os.date('*t', item_filter.get_timestamp())
+  local date_birth = os.date('*t', ts)
+
+  if date_birth.yday > date_now.yday then
+    return date_now.year - date_birth.year - 1
+  else
+    return date_now.year - date_birth.year
+  end
+end
+
+
+function item_filter.age_to_ts(age)
+  t = os.date('*t', item_filter.get_timestamp())
+  t.year = t.year - age
+  return os.time(t)
 end
 
 
@@ -61,14 +74,14 @@ local item_filters = {
     },
     ['fromAge'] = {
       ['cast'] = tonumber,
-      ['compare'] = function(item_value, filter_value) return ((item_filter.get_timestamp() - item_value) / seconds_in_year) >= filter_value  end,
+      ['compare'] = function(item_value, filter_value) return item_filter.ts_to_age(item_value) >= filter_value end,
       ['filter_field'] = 'birth_date',
       ['join_table'] = 'users',
       ['join_field'] = 'user'
     },
     ['toAge'] = {
       ['cast'] = tonumber,
-      ['compare'] = function(item_value, filter_value) return ((item_filter.get_timestamp() - item_value) / seconds_in_year) <= filter_value  end,
+      ['compare'] = function(item_value, filter_value) return item_filter.ts_to_age(item_value) < filter_value end,
       ['filter_field'] = 'birth_date',
       ['join_table'] = 'users',
       ['join_field'] = 'user'
