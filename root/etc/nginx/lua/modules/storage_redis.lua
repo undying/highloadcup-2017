@@ -28,12 +28,9 @@ end
 
 
 function storage_redis.chose(mode, connections)
-  if mode == 'w' then
-    if not connections[1] then return nil end
-    return connections[1]
-  end
-
-  if not next(connections, 2) then return connections[1] end
+  if not next(connections) then return nil end
+  if not connections[2] then return connections[1] end
+  if mode == 'w' then return connections[1] end
 
   local to_chose_cnt = 0
   for index, connection in pairs(connections) do
