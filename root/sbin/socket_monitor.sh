@@ -7,6 +7,6 @@ while :;do
   [ ${sockets_last} -eq ${sockets} ] || printf "redis sockets in use: %d\n" ${sockets_last}
 
   sockets=${sockets_last}
-  sleep 1
+  sleep 2
 done
 
