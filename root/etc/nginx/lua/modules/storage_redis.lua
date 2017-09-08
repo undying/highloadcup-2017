@@ -7,13 +7,18 @@ function storage_redis.connect()
   local connections = {}
 
   for index, conn in pairs(ngx.shared.storage_redis.options.connections) do
+    local tries = 0
     local r = redis:new()
-    local ok, err = r:connect(unpack(conn))
 
-    if not ok then
-      ngx.log(ngx.STDERR, 'redis connection failed')
-      return
-    end
+    repeat
+      local ok, err = r:connect(unpack(conn))
+
+      if err then
+        ngx.log(ngx.STDERR, 'redis connection try: ' .. tries .. ', error: ' .. err)
+      end
+
+      tries = tries + 1
+    until(ok or tires < 5)
 
     table.insert(connections, r)
   end
