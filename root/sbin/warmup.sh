@@ -17,9 +17,11 @@ function http_get(){
 until test -e /run/nginx.pid ;do sleep 1;done
 
 for n in users locations visits;do
-  printf "warming: ${n}\n"
+  printf "warming up: ${n}\n"
   for i in {1..2000};do
     http_get 127.0.0.1/${n}/${i} &
   done
 done
+
+printf "warmup is done\n"
 
