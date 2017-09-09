@@ -7,22 +7,24 @@ function storage_redis.connect()
   local connections = {}
 
   for index, conn in pairs(ngx.shared.storage_redis.options.connections) do
-
-    local tries = 7
+    local tries = 10
     local r = redis:new()
 
     repeat
       local ok, err = r:connect(unpack(conn))
 
+      if ok then
+        table.insert(connections, r)
+        return connections
+      end
+
       if err then
         ngx.log(ngx.STDERR, 'redis connection failed, tries left: ' .. tries .. ', error: ' .. err)
       end
 
-      if tries <= 0 then break end
       tries = tries - 1
+      if tries <= 0 then break end
     until(ok)
-
-    table.insert(connections, r)
   end
 
   return connections
@@ -32,7 +34,6 @@ end
 function storage_redis.chose(mode, connections)
   if not next(connections) then return nil end
   if not connections[2] then return connections[1] end
-  if mode == 'w' then return connections[1] end
 
   local to_chose_cnt = 0
   for index, connection in pairs(connections) do

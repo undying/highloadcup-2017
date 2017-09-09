@@ -1,5 +1,7 @@
 #! /bin/bash
 
+exit
+
 NGINX_CONF=/etc/nginx/nginx.conf
 DISABLE_LOGGING=1
 
