@@ -7,18 +7,20 @@ function storage_redis.connect()
   local connections = {}
 
   for index, conn in pairs(ngx.shared.storage_redis.options.connections) do
-    local tries = 0
+
+    local tries = 7
     local r = redis:new()
 
     repeat
       local ok, err = r:connect(unpack(conn))
 
       if err then
-        ngx.log(ngx.STDERR, 'redis connection try: ' .. tries .. ', error: ' .. err)
+        ngx.log(ngx.STDERR, 'redis connection failed, tries left: ' .. tries .. ', error: ' .. err)
       end
 
-      tries = tries + 1
-    until(ok or tires < 5)
+      if tries <= 0 then break end
+      tries = tries - 1
+    until(ok)
 
     table.insert(connections, r)
   end
@@ -45,7 +47,7 @@ function storage_redis.set_keepalive(connections)
   for _, connection in pairs(connections) do
     connection:set_keepalive(
       ngx.shared.storage_redis.options.keepalive_idle,
-      ngx.shared.storage_redis.options.keepalive_pool
+      ngx.shared.storage_redis.options.keepalive_pool_size
     )
   end
 end
